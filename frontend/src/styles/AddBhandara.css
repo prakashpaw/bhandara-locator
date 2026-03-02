@@ -1,0 +1,33 @@
+.add-page {
+  padding: 20px;
+}
+
+.add-form {
+  display: flex;
+  flex-direction: column;
+  max-width: 500px;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.add-form input,
+.add-form textarea {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.add-form button {
+  background-color: #ff6600;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.add-form button:hover {
+  background-color: #e55c00;
+}
