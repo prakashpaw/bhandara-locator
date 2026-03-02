@@ -1,28 +1,17 @@
+import { useEffect, useState } from 'react'
 import BhandaraCard from '../components/BhandaraCard'
 import '../styles/BhandaraList.css'
 
-const bhandaras = [
-  {
-    id: 1,
-    name: "Sai Baba Bhandara",
-    description: "Free langar for everyone",
-    date: "2024-03-15",
-    time: "12:00 PM",
-    address: "Nagpur, Maharashtra",
-    contact: "9876543210",
-  },
-  {
-    id: 2,
-    name: "Ram Navami Bhandara",
-    description: "Prasad distribution",
-    date: "2024-03-16",
-    time: "11:00 AM",
-    address: "Wardha Road, Nagpur",
-    contact: "9123456780",
-  }
-]
-
 function BhandaraList() {
+  const [bhandaras, setBhandaras] = useState([])
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/bhandaras')
+      .then(res => res.json())
+      .then(data => setBhandaras(data))
+      .catch(err => console.error('Error:', err))
+  }, [])
+
   return (
     <div className="list-page">
       <h2>🍽️ All Bhandaras</h2>
