@@ -1,15 +1,20 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import '../styles/Navbar.css'
 
 function Navbar() {
+  const location = useLocation()
+
   return (
     <nav className="navbar">
-      <div className="navbar-brand">🍛 Bhandara Locator</div>
+      <Link to="/" className="navbar-brand">
+        <div className="brand-dot"></div>
+        Bhandara Locator
+      </Link>
       <div className="navbar-links">
-        <Link to="/">Map</Link>
-        <Link to="/list">List</Link>
-        <Link to="/add">Add Bhandara</Link>
-        <Link to="/about">About</Link>
+        <Link to="/" className={location.pathname === '/' ? 'active' : ''}>Map</Link>
+        <Link to="/list" className={location.pathname === '/list' ? 'active' : ''}>Browse</Link>
+        <Link to="/about" className={location.pathname === '/about' ? 'active' : ''}>About</Link>
+        <Link to="/add" className={`nav-cta ${location.pathname === '/add' ? 'active' : ''}`}>+ Add Bhandara</Link>
       </div>
     </nav>
   )

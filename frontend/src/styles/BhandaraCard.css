@@ -1,0 +1,132 @@
+.bhandara-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  transition: all 0.25s;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  animation: fadeUp 0.6s ease both;
+}
+
+.bhandara-card:nth-child(2) { animation-delay: 0.1s; }
+.bhandara-card:nth-child(3) { animation-delay: 0.2s; }
+
+.bhandara-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--saffron), var(--gold));
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.bhandara-card:hover {
+  background: var(--card-hover);
+  border-color: rgba(255, 107, 0, 0.3);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+}
+
+.bhandara-card:hover::before {
+  opacity: 1;
+}
+
+.card-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--saffron-glow);
+  border: 1px solid rgba(255, 107, 0, 0.2);
+  color: var(--saffron);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+.card-badge .live-dot {
+  width: 5px;
+  height: 5px;
+  background: var(--saffron);
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+}
+
+.card-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
+}
+
+.card-desc {
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 16px;
+  font-weight: 300;
+}
+
+.card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.meta-icon {
+  width: 18px;
+  height: 18px;
+  background: rgba(255, 107, 0, 0.1);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  flex-shrink: 0;
+}
+
+.card-footer {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dist-badge {
+  font-size: 0.75rem;
+  color: var(--gold);
+  font-weight: 500;
+}
+
+.directions-btn {
+  font-size: 0.75rem;
+  color: var(--saffron);
+  background: var(--saffron-glow);
+  border: 1px solid rgba(255, 107, 0, 0.2);
+  padding: 4px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.directions-btn:hover {
+  background: rgba(255, 107, 0, 0.2);
+}
