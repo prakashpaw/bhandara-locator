@@ -17,20 +17,40 @@ function AddBhandara() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
+    
+    // Get token for authentication
+    const token = localStorage.getItem('token')
+    
     try {
       const res = await fetch('http://3.6.90.129/api/bhandaras', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // Added Authorization header
+        },
         body: JSON.stringify(form)
       })
+
+      if (!res.ok) {
+        // Handle unauthorized or other errors
+        if (res.status === 401) {
+          alert('❌ Session expired or unauthorized. Please log in again.')
+        } else {
+          throw new Error('Failed to submit')
+        }
+        return
+      }
+
       const data = await res.json()
       console.log('Added:', data)
       setSuccess(true)
+      
+      // Reset form
       setForm({ name: '', description: '', date: '', time: '', address: '', contact: '', lat: '', lng: '' })
       setTimeout(() => setSuccess(false), 4000)
     } catch (err) {
       console.error('Error:', err)
-      alert('❌ Failed to add bhandara')
+      alert('❌ Failed to add bhandara. Please try again later.')
     } finally {
       setLoading(false)
     }

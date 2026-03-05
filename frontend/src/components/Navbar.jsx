@@ -1,8 +1,17 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import '../styles/Navbar.css'
 
 function Navbar() {
   const location = useLocation()
+  const navigate = useNavigate()
+  const token = localStorage.getItem('token')
+  const email = localStorage.getItem('email')
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('email')
+    navigate('/')
+  }
 
   return (
     <nav className="navbar">
@@ -14,7 +23,14 @@ function Navbar() {
         <Link to="/" className={location.pathname === '/' ? 'active' : ''}>Map</Link>
         <Link to="/list" className={location.pathname === '/list' ? 'active' : ''}>Browse</Link>
         <Link to="/about" className={location.pathname === '/about' ? 'active' : ''}>About</Link>
-        <Link to="/add" className={`nav-cta ${location.pathname === '/add' ? 'active' : ''}`}>+ Add Bhandara</Link>
+        {token ? (
+          <>
+            <Link to="/add" className={`nav-cta ${location.pathname === '/add' ? 'active' : ''}`}>+ Add Bhandara</Link>
+            <button className="logout-btn" onClick={handleLogout}>Logout ({email})</button>
+          </>
+        ) : (
+          <Link to="/login" className="nav-cta">Login</Link>
+        )}
       </div>
     </nav>
   )

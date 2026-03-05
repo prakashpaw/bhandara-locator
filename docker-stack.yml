@@ -11,6 +11,7 @@ services:
       DB_USER: postgres
       DB_PASSWORD: postgres123
       DB_NAME: bhandara_db
+      JWT_SECRET: bhandara_super_secret_key_2024 # Added Secret Key
     networks:
       - bhandara_network
     deploy:
