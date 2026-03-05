@@ -22,7 +22,7 @@ function About() {
           Whether it's a temple langar, a Ram Navami mahaprasad, or a neighbourhood seva — no one should
           go hungry when there's food nearby.
           <br /><br />
-          This website is created by Prakash Pawar.
+          This website is created by Prakash Pawar. You can contact me on pawarprakash148@gmail.com
         </p>
       </div>
 
