@@ -6,6 +6,7 @@ import BhandaraList from './pages/BhandaraList'
 import AddBhandara from './pages/AddBhandara'
 import About from './pages/About'
 import Login from './pages/Login'
+import AdminUsers from './pages/AdminUsers'
 
 function App() {
   return (
@@ -17,9 +18,10 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/login" element={<Login />} />
         <Route path="/add" element={
-          <ProtectedRoute>
-            <AddBhandara />
-          </ProtectedRoute>
+          <ProtectedRoute><AddBhandara /></ProtectedRoute>
+        } />
+        <Route path="/admin/users" element={
+          <ProtectedRoute><AdminUsers /></ProtectedRoute>
         } />
       </Routes>
     </BrowserRouter>

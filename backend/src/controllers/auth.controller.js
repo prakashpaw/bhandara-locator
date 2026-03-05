@@ -44,4 +44,16 @@ const login = async (req, res) => {
   }
 }
 
-module.exports = { register, login }
+// GET ALL ADMINS
+const getAdmins = async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, email, role, created_at FROM users ORDER BY created_at DESC'
+    )
+    res.json(result.rows)
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' })
+  }
+}
+
+module.exports = { register, login, getAdmins }
