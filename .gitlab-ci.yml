@@ -1,0 +1,61 @@
+stages:
+  - build
+  - push
+  - deploy
+
+variables:
+  BACKEND_IMAGE: $DOCKER_USERNAME/bhandara_backend:latest
+  FRONTEND_IMAGE: $DOCKER_USERNAME/bhandara_frontend:latest
+
+# BUILD BACKEND
+build_backend:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+  script:
+    - docker build -t $BACKEND_IMAGE ./backend
+    - docker push $BACKEND_IMAGE
+  only:
+    - main
+    - dev
+
+# BUILD FRONTEND
+build_frontend:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+  script:
+    - docker build -t $FRONTEND_IMAGE ./frontend
+    - docker push $FRONTEND_IMAGE
+  only:
+    - main
+    - dev
+
+# DEPLOY TO AWS (only on main branch)
+deploy:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client
+    - mkdir -p ~/.ssh
+    - echo "$EC2_SSH_KEY" > ~/.ssh/bhandara-key
+    - chmod 600 ~/.ssh/bhandara-key
+    - ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
+  script:
+    - |
+      ssh -i ~/.ssh/bhandara-key $EC2_USER@$EC2_HOST "
+        docker service update --image $DOCKER_USERNAME/bhandara_backend:latest bhandara_backend
+        docker service update --image $DOCKER_USERNAME/bhandara_frontend:latest bhandara_frontend
+      "
+  only:
+    - main
