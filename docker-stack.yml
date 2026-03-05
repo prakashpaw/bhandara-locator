@@ -11,7 +11,7 @@ services:
       DB_USER: postgres
       DB_PASSWORD: postgres123
       DB_NAME: bhandara_db
-      JWT_SECRET: bhandara_super_secret_key_2024 # Added Secret Key
+      JWT_SECRET: bhandara_super_secret_key_2024
     networks:
       - bhandara_network
     deploy:
@@ -54,10 +54,58 @@ services:
       restart_policy:
         condition: on-failure
 
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - target: 9090
+        published: 9090
+        protocol: tcp
+        mode: host
+    configs:
+      - source: prometheus_config
+        target: /etc/prometheus/prometheus.yml
+    networks:
+      - bhandara_network
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - target: 3000
+        published: 3000
+        protocol: tcp
+        mode: host
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: bhandara123
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - bhandara_network
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+
 networks:
   bhandara_network:
     driver: overlay
 
+volumes:
+  grafana_data:
+
 configs:
   nginx_config:
     file: ./nginx/nginx.conf
+  prometheus_config:
+    file: ./monitoring/prometheus.yml
