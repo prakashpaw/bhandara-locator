@@ -1,5 +1,4 @@
 import API from '../api'
-import API from '../api'
 import { useState } from 'react'
 import '../styles/AddBhandara.css'
 

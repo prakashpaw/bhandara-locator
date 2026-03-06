@@ -1,5 +1,4 @@
 import API from '../api'
-import API from '../api'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/AdminUsers.css'
