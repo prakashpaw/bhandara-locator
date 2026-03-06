@@ -7,6 +7,7 @@ import AddBhandara from './pages/AddBhandara'
 import About from './pages/About'
 import Login from './pages/Login'
 import AdminUsers from './pages/AdminUsers'
+import NotFound from './pages/NotFound'
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/list" element={<BhandaraList />} />
         <Route path="/about" element={<About />} />
         <Route path="/login" element={<Login />} />
+        <Route path="*" element={<NotFound />} />
         <Route path="/add" element={
           <ProtectedRoute><AddBhandara /></ProtectedRoute>
         } />
