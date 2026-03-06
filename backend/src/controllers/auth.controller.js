@@ -6,16 +6,24 @@ const jwt = require('jsonwebtoken')
 const register = async (req, res) => {
   const { email, password } = req.body
   try {
+    // Check if any user exists
+    const userCountResult = await pool.query('SELECT COUNT(*) FROM users')
+    const userCount = parseInt(userCountResult.rows[0].count, 10)
+
+    // First user is admin, others are 'user'
+    const role = userCount === 0 ? 'admin' : 'user'
+
     const hashed = await bcrypt.hash(password, 10)
     const result = await pool.query(
-      'INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id, email, role',
-      [email, hashed]
+      'INSERT INTO users (email, password, role) VALUES ($1, $2, $3) RETURNING id, email, role',
+      [email, hashed, role]
     )
     res.status(201).json({ message: 'User created', user: result.rows[0] })
   } catch (err) {
     if (err.code === '23505') {
       return res.status(400).json({ error: 'Email already exists' })
     }
+    console.error(err)
     res.status(500).json({ error: 'Server error' })
   }
 }
