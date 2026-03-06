@@ -56,7 +56,9 @@ function Navbar() {
                   <div className="dropdown-header">{email}</div>
                   <div className="dropdown-divider"></div>
                   <Link to="/add" className="dropdown-item" onClick={() => setDropdownOpen(false)}>🍛 Add Bhandara</Link>
-                  <Link to="/admin/users" className="dropdown-item" onClick={() => setDropdownOpen(false)}>👥 Manage Admins</Link>
+                  {localStorage.getItem('role') === 'admin' && (
+                    <Link to="/admin/users" className="dropdown-item" onClick={() => setDropdownOpen(false)}>👥 Manage Admins</Link>
+                  )}
                   <div className="dropdown-divider"></div>
                   <button className="dropdown-item logout" onClick={handleLogout}>🚪 Logout</button>
                 </div>
@@ -84,7 +86,9 @@ function Navbar() {
             <div className="mobile-divider"></div>
             <div style={{ padding: '8px 16px', fontSize: '0.75rem', color: 'var(--muted)' }}>{email}</div>
             <Link to="/add" className="">🍛 Add Bhandara</Link>
-            <Link to="/admin/users" className="">👥 Manage Admins</Link>
+            {localStorage.getItem('role') === 'admin' && (
+              <Link to="/admin/users" className="">👥 Manage Admins</Link>
+            )}
             <div className="mobile-divider"></div>
             <button className="mobile-logout" onClick={handleLogout}>🚪 Logout</button>
           </>

@@ -30,6 +30,7 @@ function Login() {
       }
       localStorage.setItem('token', data.token)
       localStorage.setItem('email', data.email)
+      localStorage.setItem('role', data.role)
       navigate('/add')
     } catch (err) {
       setError('Something went wrong')
