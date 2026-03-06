@@ -1,7 +1,7 @@
 .navbar {
   position: fixed;
   top: 0; left: 0; right: 0;
-  z-index: 100;
+  z-index: 2000;
   padding: 0 40px;
   height: 64px;
   display: flex;
@@ -59,7 +59,7 @@
   background: rgba(13,10,7,0.97); backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
   flex-direction: column; padding: 12px; gap: 4px;
-  z-index: 99; animation: fadeUp 0.2s ease both;
+  z-index: 1999; animation: fadeUp 0.2s ease both;
 }
 .mobile-menu.open { display: flex; }
 
@@ -100,7 +100,7 @@
   position: absolute; top: calc(100% + 8px); right: 0;
   background: var(--card); border: 1px solid var(--border);
   border-radius: 10px; min-width: 210px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5); z-index: 200;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5); z-index: 2100;
   overflow: hidden; animation: fadeUp 0.15s ease both;
 }
 .dropdown-header { padding: 10px 14px; font-size: 0.75rem; color: var(--muted); font-weight: 300; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
