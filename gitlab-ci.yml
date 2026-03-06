@@ -9,7 +9,7 @@ variables:
   FRONTEND_IMAGE: $DOCKER_USERNAME/bhandara_frontend:latest
   TF_DIR: "./infra"
 
-# ── STAGE 1: VALIDATE TERRAFORM ────────────────────────────────
+# â”€â”€ STAGE 1: VALIDATE TERRAFORM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 terraform_validate:
   stage: validate
   image:
@@ -25,7 +25,7 @@ terraform_validate:
     - main
     - dev
 
-# ── STAGE 2: TERRAFORM APPLY (infra) ───────────────────────────
+# â”€â”€ STAGE 2: TERRAFORM APPLY (infra) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 terraform_apply:
   stage: infra
   image:
@@ -55,7 +55,7 @@ terraform_apply:
   only:
     - main
 
-# ── STAGE 3: BUILD IMAGES ──────────────────────────────────────
+# â”€â”€ STAGE 3: BUILD IMAGES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 build_backend:
   stage: build
   image: docker:24
@@ -97,7 +97,7 @@ build_frontend:
     - main
     - dev
 
-# ── STAGE 4: DEPLOY TO AWS ─────────────────────────────────────
+# â”€â”€ STAGE 4: DEPLOY TO AWS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 deploy:
   stage: deploy
   image: alpine:latest
@@ -110,7 +110,7 @@ deploy:
     - mkdir -p ~/.ssh
     - echo "$EC2_SSH_KEY" > ~/.ssh/bhandara-key
     - chmod 600 ~/.ssh/bhandara-key
-    # Get IPs — use terraform output if available, else fall back to CI vars
+    # Get IPs â€” use terraform output if available, else fall back to CI vars
     - |
       if [ -f /tmp/manager_ip.txt ]; then
         MANAGER_IP=$(cat /tmp/manager_ip.txt)
