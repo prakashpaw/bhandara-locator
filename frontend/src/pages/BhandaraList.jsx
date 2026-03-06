@@ -1,3 +1,5 @@
+import API from '../api'
+import API from '../api'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/BhandaraList.css'
@@ -8,7 +10,7 @@ function BhandaraList() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    fetch('http://3.6.90.129/api/bhandaras')
+    fetch(API + '/api/bhandaras')
       .then(res => res.json())
       .then(data => setBhandaras(data))
       .catch(err => console.error('Error:', err))

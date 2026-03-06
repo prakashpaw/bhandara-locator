@@ -1,3 +1,5 @@
+import API from '../api'
+import API from '../api'
 import { useState } from 'react'
 import '../styles/AddBhandara.css'
 
@@ -22,7 +24,7 @@ function AddBhandara() {
     const token = localStorage.getItem('token')
     
     try {
-      const res = await fetch('http://3.6.90.129/api/bhandaras', {
+      const res = await fetch(API + '/api/bhandaras', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

@@ -1,3 +1,5 @@
+import API from '../api'
+import API from '../api'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/AdminUsers.css'
@@ -12,7 +14,7 @@ function AdminUsers() {
   const token = localStorage.getItem('token')
 
   const fetchAdmins = () => {
-    fetch('http://3.6.90.129/api/auth/users', {
+    fetch(API + '/api/auth/users', {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -32,7 +34,7 @@ function AdminUsers() {
     setLoading(true)
     setError('')
     try {
-      const res = await fetch('http://3.6.90.129/api/auth/register', {
+      const res = await fetch(API + '/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

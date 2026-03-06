@@ -1,3 +1,5 @@
+import API from '../api'
+import API from '../api'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/Login.css'
@@ -17,7 +19,7 @@ function Login() {
     setLoading(true)
     setError('')
     try {
-      const res = await fetch('http://3.6.90.129/api/auth/login', {
+      const res = await fetch(API + '/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)

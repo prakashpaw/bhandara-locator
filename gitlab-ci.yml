@@ -1,0 +1,222 @@
+stages:
+  - validate
+  - infra
+  - build
+  - deploy
+
+variables:
+  BACKEND_IMAGE: $DOCKER_USERNAME/bhandara_backend:latest
+  FRONTEND_IMAGE: $DOCKER_USERNAME/bhandara_frontend:latest
+  TF_DIR: "./infra"
+
+# ── STAGE 1: VALIDATE TERRAFORM ────────────────────────────────
+terraform_validate:
+  stage: validate
+  image:
+    name: hashicorp/terraform:1.6
+    entrypoint: [""]
+  before_script:
+    - cd $TF_DIR
+    - terraform init -backend=false
+  script:
+    - terraform validate
+    - terraform fmt -check
+  only:
+    - main
+    - dev
+
+# ── STAGE 2: TERRAFORM APPLY (infra) ───────────────────────────
+terraform_apply:
+  stage: infra
+  image:
+    name: hashicorp/terraform:1.6
+    entrypoint: [""]
+  before_script:
+    - cd $TF_DIR
+    - terraform init
+  script:
+    - terraform apply -auto-approve
+    # Save outputs to file for deploy stage
+    - terraform output -raw manager_public_ip > /tmp/manager_ip.txt
+    - terraform output -raw rds_endpoint > /tmp/rds_endpoint.txt
+    - terraform output -raw worker_1_public_ip > /tmp/worker1_ip.txt
+    - terraform output -raw worker_2_public_ip > /tmp/worker2_ip.txt
+    - echo "Manager IP $(cat /tmp/manager_ip.txt)"
+    - echo "RDS $(cat /tmp/rds_endpoint.txt)"
+  artifacts:
+    paths:
+      - /tmp/manager_ip.txt
+      - /tmp/rds_endpoint.txt
+      - /tmp/worker1_ip.txt
+      - /tmp/worker2_ip.txt
+    expire_in: 1 hour
+  environment:
+    name: production
+  only:
+    - main
+
+# ── STAGE 3: BUILD IMAGES ──────────────────────────────────────
+build_backend:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+  script:
+    - docker build -t $BACKEND_IMAGE ./backend
+    - docker push $BACKEND_IMAGE
+  only:
+    - main
+    - dev
+
+build_frontend:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+  script:
+    # Pass the EC2 IP as build arg so Vite bakes it in at build time
+    - |
+      if [ -f /tmp/manager_ip.txt ]; then
+        MANAGER_IP=$(cat /tmp/manager_ip.txt)
+      else
+        MANAGER_IP=$EC2_HOST
+      fi
+    - docker build
+        --build-arg VITE_API_URL=http://$MANAGER_IP
+        -t $FRONTEND_IMAGE ./frontend
+    - docker push $FRONTEND_IMAGE
+  only:
+    - main
+    - dev
+
+# ── STAGE 4: DEPLOY TO AWS ─────────────────────────────────────
+deploy:
+  stage: deploy
+  image: alpine:latest
+  dependencies:
+    - terraform_apply
+    - build_frontend
+    - build_backend
+  before_script:
+    - apk add --no-cache openssh-client bash
+    - mkdir -p ~/.ssh
+    - echo "$EC2_SSH_KEY" > ~/.ssh/bhandara-key
+    - chmod 600 ~/.ssh/bhandara-key
+    # Get IPs — use terraform output if available, else fall back to CI vars
+    - |
+      if [ -f /tmp/manager_ip.txt ]; then
+        MANAGER_IP=$(cat /tmp/manager_ip.txt)
+        WORKER1_IP=$(cat /tmp/worker1_ip.txt)
+        WORKER2_IP=$(cat /tmp/worker2_ip.txt)
+        RDS_HOST=$(cat /tmp/rds_endpoint.txt | cut -d: -f1)
+      else
+        MANAGER_IP=$EC2_HOST
+        WORKER1_IP=$EC2_WORKER1
+        WORKER2_IP=$EC2_WORKER2
+        RDS_HOST=$DB_HOST
+      fi
+    - ssh-keyscan -H $MANAGER_IP >> ~/.ssh/known_hosts
+    - ssh-keyscan -H $WORKER1_IP >> ~/.ssh/known_hosts 2>/dev/null || true
+    - ssh-keyscan -H $WORKER2_IP >> ~/.ssh/known_hosts 2>/dev/null || true
+  script:
+    - |
+      echo "=== Deploying to Manager: $MANAGER_IP ==="
+
+      # Step 1: Init Docker Swarm on manager (skip if already initialized)
+      ssh -i ~/.ssh/bhandara-key -o StrictHostKeyChecking=no ubuntu@$MANAGER_IP "
+        if ! docker info 2>/dev/null | grep -q 'Swarm: active'; then
+          docker swarm init --advertise-addr $MANAGER_IP
+          echo 'Swarm initialized'
+        else
+          echo 'Swarm already active'
+        fi
+      "
+
+      # Step 2: Get join token
+      JOIN_TOKEN=$(ssh -i ~/.ssh/bhandara-key -o StrictHostKeyChecking=no ubuntu@$MANAGER_IP \
+        "docker swarm join-token worker -q")
+
+      # Step 3: Join workers (skip if already in swarm)
+      for WORKER_IP in $WORKER1_IP $WORKER2_IP; do
+        ssh -i ~/.ssh/bhandara-key -o StrictHostKeyChecking=no ubuntu@$WORKER_IP "
+          if ! docker info 2>/dev/null | grep -q 'Swarm: active'; then
+            docker swarm join --token $JOIN_TOKEN $MANAGER_IP:2377
+            echo 'Worker joined swarm'
+          else
+            echo 'Worker already in swarm'
+          fi
+        " || echo "Warning: Could not connect to worker $WORKER_IP"
+      done
+
+      # Step 4: Copy config files to manager
+      scp -i ~/.ssh/bhandara-key -o StrictHostKeyChecking=no \
+        docker-stack.yml ubuntu@$MANAGER_IP:~/docker-stack.yml
+      scp -i ~/.ssh/bhandara-key -o StrictHostKeyChecking=no \
+        nginx/nginx.conf ubuntu@$MANAGER_IP:~/nginx.conf
+      scp -i ~/.ssh/bhandara-key -o StrictHostKeyChecking=no \
+        monitoring/prometheus.yml ubuntu@$MANAGER_IP:~/prometheus.yml
+
+      # Step 5: Deploy or update stack
+      ssh -i ~/.ssh/bhandara-key -o StrictHostKeyChecking=no ubuntu@$MANAGER_IP "
+        # Pull latest images
+        docker pull $DOCKER_USERNAME/bhandara_backend:latest
+        docker pull $DOCKER_USERNAME/bhandara_frontend:latest
+
+        # Setup dirs
+        mkdir -p ~/monitoring ~/nginx
+
+        # Move configs
+        mv ~/nginx.conf ~/nginx/nginx.conf
+        mv ~/prometheus.yml ~/monitoring/prometheus.yml
+
+        # Update env in stack file with real RDS host
+        sed -i 's|DB_HOST:.*|DB_HOST: $RDS_HOST|g' ~/docker-stack.yml
+
+        # Deploy stack (creates or updates)
+        if docker stack ls | grep -q bhandara; then
+          docker service update --image $DOCKER_USERNAME/bhandara_backend:latest bhandara_backend
+          docker service update --image $DOCKER_USERNAME/bhandara_frontend:latest bhandara_frontend
+          echo 'Stack updated'
+        else
+          docker stack deploy -c ~/docker-stack.yml bhandara
+          echo 'Stack deployed fresh'
+        fi
+
+        # Wait for services to be ready
+        sleep 20
+
+        # Step 6: Create admin user if not exists
+        docker exec \$(docker ps --filter name=bhandara_backend -q | head -1) \
+          node -e \"
+            const pool = require('./src/db/db');
+            const bcrypt = require('bcryptjs');
+            async function createAdmin() {
+              try {
+                const hash = await bcrypt.hash('$ADMIN_PASSWORD', 10);
+                await pool.query(
+                  'INSERT INTO users (email, password, role) VALUES (\$1, \$2, \$3) ON CONFLICT (email) DO NOTHING',
+                  ['$ADMIN_EMAIL', hash, 'admin']
+                );
+                console.log('Admin user ready');
+                process.exit(0);
+              } catch(e) { console.log('Admin setup:', e.message); process.exit(0); }
+            }
+            createAdmin();
+          \" 2>/dev/null || echo 'Admin setup skipped'
+
+        echo '=== Deployment complete ==='
+        echo 'App: http://$MANAGER_IP'
+        echo 'Grafana: http://$MANAGER_IP:3000'
+        echo 'Prometheus: http://$MANAGER_IP:9090'
+        docker stack ps bhandara
+      "
+  only:
+    - main
